@@ -1,0 +1,223 @@
+<html>
+    <head>
+        <style>
+        body {
+            background-color: black;
+            color: white;
+            margin-top: 0px;
+            margin-bottom: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
+            padding: 0;
+        }
+        #header {
+            text-align: center
+        }
+        
+        #slider {
+            width: 100%;
+            height: 80px;
+
+        }
+        
+        #currentStatus{
+            width: 100%;
+            font-size: 500%;
+            font-family: sans-serif;
+            color: red;
+            text-align: center;
+            font-weight: bold;
+            
+        }
+
+        #bodyContainer{
+            position: relative;
+        }
+
+        #menu{
+            padding-top: 10%;
+            text-align: center;
+
+        }
+        /* stuff for slider */
+
+        #sliderContainer {
+            /* position: absolute; */
+            width: 100%;
+            height: 25%;
+            bottom: 0;
+        }
+
+        input {
+            background-color: black;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            margin: 50px 0;
+            width: 100%;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8.4px;
+            cursor: pointer;
+            animate: 0.2s;
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+            background: #3071a9;
+            border-radius: 1.3px;
+            border: 0.2px solid #010101;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+            border: 1px solid #000000;
+            height: 100px;
+            width: 100px;
+            border-radius: 3px;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -46px;
+        }
+
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #367ebd;
+        }
+
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8.4px;
+            cursor: pointer;
+            animate: 0.2s;
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+            background: #3071a9;
+            border-radius: 1.3px;
+            border: 0.2px solid #010101;
+        }
+
+        input[type=range]::-moz-range-thumb {
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+            border: 1px solid #000000;
+            height: 36px;
+            width: 16px;
+            border-radius: 3px;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        input[type=range]::-ms-track {
+            width: 100%;
+            height: 8.4px;
+            cursor: pointer;
+            animate: 0.2s;
+            background: transparent;
+            border-color: transparent;
+            border-width: 16px 0;
+            color: transparent;
+        }
+
+        input[type=range]::-ms-fill-lower {
+            background: #2a6495;
+            border: 0.2px solid #010101;
+            border-radius: 2.6px;
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        }
+
+        input[type=range]::-ms-fill-upper {
+            background: #3071a9;
+            border: 0.2px solid #010101;
+            border-radius: 2.6px;
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+        }
+
+        input[type=range]::-ms-thumb {
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+            border: 1px solid #000000;
+            height: 36px;
+            width: 16px;
+            border-radius: 3px;
+            background: #ffffff;
+            cursor: pointer;
+        }
+
+        input[type=range]:focus::-ms-fill-lower {
+            background: #3071a9;
+        }
+
+        input[type=range]:focus::-ms-fill-upper {
+            background: #367ebd;
+        }
+
+        </style>  
+    </head>
+    <body>
+        <div id="header">
+            <h2>Suzie Clever Lamp 0.0.1</h2>
+        </div>
+        <div id="bodyContainer">
+            <div id="currentStatus">
+                0
+            </div>
+            <div id="sliderContainer">
+                <input id="slider" type="range" min="0" max="1023" value="0" />
+            </div>
+            <div id="menu">
+                <a href="/wifi">Configure WiFi</a>
+            </div>
+        </div>
+        <script>
+(function(){
+    var state = 0;
+    var requesting = false;
+    // var prefix = 'http://suzielamp.local/'
+    var prefix = '';
+    var sliderEl = document.getElementById('slider');
+    var curStatusEl = document.getElementById('currentStatus')
+    var doGET = function (url, callback) {
+        requesting = true;
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onload = function () {
+            requesting = false;
+            callback(JSON.parse(xhr.responseText));
+        };
+        xhr.send(null);
+    }
+    var getStatus = function (callback) {
+        doGET(prefix + 'get', callback);
+    }
+    var setStatus = function (status, callback) {
+        if (requesting == true) {
+            return;
+        }
+        doGET(prefix + 'set?s=' + status, callback);
+    }
+    var updateUI = function(){
+        sliderEl.value = state;
+        curStatusEl.innerHTML = Math.round(state / 10.23) + '%';
+    }
+    /* initialize! */
+    getStatus( function(result) {
+        /* update current state */
+        state = result.status;
+        /* update UI */
+        updateUI();
+        /* register slider controls */
+        sliderEl.addEventListener('change', function () {
+            state = sliderEl.value;
+            /* update! */
+            setStatus(state, function(result) {
+                state = result.status;
+                updateUI();
+            });
+        });
+    });
+})(); 
+        </script>
+    </body>
+</html>
